@@ -90,6 +90,7 @@ static int scan_sqlite_passwords(HANDLE hFile, PasswordCallback callback, void* 
     // Scan all pages looking for password data
     // In Login Data, passwords are stored in the "logins" table
     // We'll do a simple scan for the pattern: URL, username, password_value
+    // Limit to 1000 pages to prevent excessive scanning on very large databases
     for (int page_num = 1; page_num <= header.database_size && page_num < 1000; page_num++) {
         unsigned char* page = read_page(hFile, page_num, page_size);
         if (!page) continue;
@@ -99,8 +100,10 @@ static int scan_sqlite_passwords(HANDLE hFile, PasswordCallback callback, void* 
             int cell_count = (page[3] << 8) | page[4];
             int offset = (page_num == 1) ? 100 : 8; // Skip header on first page
             
+            // Limit cells to prevent excessive parsing (Login Data typically has <20 cells per page)
             for (int cell = 0; cell < cell_count && cell < 100; cell++) {
                 int cell_offset = (page[offset + cell * 2] << 8) | page[offset + cell * 2 + 1];
+                // Reserve 100 bytes at end of page for safety margin
                 if (cell_offset < page_size - 100) {
                     unsigned char* cell_ptr = page + cell_offset;
                     

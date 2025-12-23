@@ -136,6 +136,9 @@ struct ExtractState {
     int count;
 };
 
+// Display limits for console output (prevent buffer overflow)
+#define MAX_DISPLAY_LEN 100
+
 // Callback for each password found
 static void password_callback(const char* url, int url_len,
                                const char* username, int username_len,
@@ -155,11 +158,11 @@ static void password_callback(const char* url, int url_len,
         DWORD written;
         
         WriteConsoleA(hStdOut, "\nURL: ", 6, &written, NULL);
-        WriteConsoleA(hStdOut, url, url_len > 100 ? 100 : url_len, &written, NULL);
+        WriteConsoleA(hStdOut, url, url_len > MAX_DISPLAY_LEN ? MAX_DISPLAY_LEN : url_len, &written, NULL);
         
         if (username && username_len > 0) {
             WriteConsoleA(hStdOut, "\nUsername: ", 11, &written, NULL);
-            WriteConsoleA(hStdOut, username, username_len > 100 ? 100 : username_len, &written, NULL);
+            WriteConsoleA(hStdOut, username, username_len > MAX_DISPLAY_LEN ? MAX_DISPLAY_LEN : username_len, &written, NULL);
         }
         
         WriteConsoleA(hStdOut, "\nPassword: ", 11, &written, NULL);
