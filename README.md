@@ -11,6 +11,11 @@
 A post-exploitation tool demonstrating a complete, in-memory bypass of Chromium's **App-Bound Encryption (ABE)**. This project utilizes **Direct Syscall-based Reflective Process Hollowing** to launch a legitimate browser process in a suspended state, stealthily injecting a payload to hijack its identity and security context. This **Living-off-the-Land (LOTL)** technique that subverts the browser's own security model. The fileless approach allows the tool to operate entirely from memory, bypassing user-land API hooks to decrypt and exfiltrate sensitive user data (cookies, passwords, payments) from modern Chromium browsers.
 
 If you find this research valuable, I’d appreciate a coffee:  
+
+> **🎯 NEW: Minimal Version Available**
+> 
+> Looking for a lightweight, size-optimized implementation? Check out the [**Minimal Chrome Password Decryptor**](minimal/) — a standalone executable **≤100KB** with no external dependencies that decrypts Chrome/Edge passwords using DPAPI. Perfect for size-constrained scenarios or educational purposes.
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M61EP5XL)
 
 ## 🛡️ Core Technical Pillars
@@ -110,6 +115,9 @@ The tool's execution is focused on stealth and efficiency, built around a **Dire
 
 This project uses a simple, robust build script that handles all compilation and resource embedding automatically.
 
+> **📦 Minimal Version:** For a size-optimized standalone executable (≤100KB), see the [Minimal Build Instructions](minimal/).
+
+
 1. **Clone** this repository.
 
 2. Open a **Developer Command Prompt for VS** (or any MSVC‑enabled shell).
@@ -126,6 +134,11 @@ You can find the latest pre-compiled binaries on the [**Releases page**](https:/
 
 - `chromelevator_x64.exe`
 - `chromelevator_arm64.exe`
+
+**Minimal Version (≤100KB):**
+
+- `chrome_decrypt_minimal_x64.exe`
+- `chrome_decrypt_minimal_arm64.exe`
 
 ## 🚀 Usage
 

@@ -29,6 +29,52 @@ jobs:
           name: build-tool-encryptor
           path: build/encryptor.exe
 
+  build-minimal:
+    name: Build Minimal Version for ${{ matrix.architecture }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            msvc_arch: x64
+            final_name: chrome_decrypt_minimal_x64.exe
+          - architecture: arm64
+            msvc_arch: x64_arm64
+            final_name: chrome_decrypt_minimal_arm64.exe
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Add MSVC to PATH for ${{ matrix.architecture }}
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
+      - name: Build Minimal Version
+        shell: cmd
+        run: |
+          call minimal\build.bat
+      - name: Check File Size
+        shell: cmd
+        run: |
+          for %%A in (minimal\build\chrome_decrypt.exe) do (
+            set size=%%~zA
+            set /a size_kb=!size! / 1024
+            echo File size: !size! bytes ^(!size_kb! KB^)
+            if !size_kb! GTR 100 (
+              echo WARNING: Size exceeds 100KB limit
+              exit /b 1
+            )
+          )
+      - name: Rename Final Executable
+        shell: cmd
+        run: |
+          copy minimal\build\chrome_decrypt.exe ${{ matrix.final_name }}
+      - name: Upload Minimal Executable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: minimal-binary-${{ matrix.architecture }}
+          path: ${{ matrix.final_name }}
+
   build:
     name: Build for ${{ matrix.architecture }}
     runs-on: windows-latest
@@ -72,12 +118,12 @@ jobs:
   create_release:
     name: Create GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [build, build-minimal]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download all injector binaries
+      - name: Download all binaries
         uses: actions/download-artifact@v4
         with:
           path: release_assets
@@ -107,11 +153,17 @@ jobs:
           body: |
             Automated release for version **${{ github.ref_name }}**.
 
-            The attached `.zip` file contains the final injector executable for all supported architectures.
+            The attached `.zip` file contains executables for all supported architectures.
 
-            **Contents:**
-            - `chromelevator_x64.exe`
-            - `chromelevator_arm64.exe`
+            **Full Version (with ABE support):**
+            - `chromelevator_x64.exe` - Full-featured injector for x64
+            - `chromelevator_arm64.exe` - Full-featured injector for ARM64
+
+            **Minimal Version (≤100KB, DPAPI only):**
+            - `chrome_decrypt_minimal_x64.exe` - Minimal size implementation for x64
+            - `chrome_decrypt_minimal_arm64.exe` - Minimal size implementation for ARM64
+
+            See [minimal/README.md](https://github.com/Dante-cpu/Chrome-App-Bound-Encryption-Decryption/tree/main/minimal) for details on the minimal version.
           draft: false
           prerelease: false
           files: ${{ steps.zip_package.outputs.zip_path }}
